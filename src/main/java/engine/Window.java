@@ -5,7 +5,7 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
@@ -13,6 +13,7 @@ public class Window {
     private int width;
     private int height;
     private long windowID;
+    private boolean resized = false;
 
     public Window(String title, int width, int height) {
         this.title = title;
@@ -37,6 +38,7 @@ public class Window {
         glfwSetFramebufferSizeCallback(windowID, (window, width, height) -> {
             this.width = width;
             this.height = height;
+            this.resized = true;
         });
 
         glfwSetKeyCallback(windowID, (window, key, scancode, action, mods) -> {
@@ -52,10 +54,32 @@ public class Window {
         glfwSwapInterval(1);
         glfwShowWindow(windowID);
         GL.createCapabilities();
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0, 0, 0, 0);
     }
+
+    public boolean isResized() {
+        return resized;
+    }
+
+    public void setResized(boolean resized) {
+        this.resized = resized;
+    }
+
     public boolean shouldClose() {
         return glfwWindowShouldClose(windowID);
+    }
+
+    public void setClearColor(float r, float g, float b, float a) {
+        glClearColor(r, g, b, a);
+    }
+
+    public boolean isKeyPressed(int key) {
+        return glfwGetKey(windowID, key) == GLFW_PRESS;
+    }
+
+    public void clear() {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public void update() {

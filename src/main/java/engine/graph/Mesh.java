@@ -15,17 +15,19 @@ import static org.lwjgl.system.MemoryUtil.memFree;
 public class Mesh {
     private final int VAO;
     private final int posVBO;
-    private final int colVBO;
+    private final int texVBO;
     private final int idxVBO;
     private final int vertexCount;
+    private final Texture texture;
 
-    public Mesh(float[] positions, float[] colors, int[] indices) {
+    public Mesh(float[] positions, float[] texCoords, int[] indices, Texture texture) {
 
         FloatBuffer verticesBuffer = null;
-        FloatBuffer colorsBuffer = null;
+        FloatBuffer texCoordsBuffer = null;
         IntBuffer indicesBuffer = null;
 
         try {
+            this.texture = texture;
             this.vertexCount = indices.length;
 
             this.VAO = glGenVertexArrays();
@@ -41,13 +43,13 @@ public class Mesh {
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-            this.colVBO = glGenBuffers();
-            colorsBuffer = MemoryUtil.memAllocFloat(colors.length);
-            colorsBuffer.put(colors).flip();
-            glBindBuffer(GL_ARRAY_BUFFER, this.colVBO);
-            glBufferData(GL_ARRAY_BUFFER, colorsBuffer, GL_STATIC_DRAW);
+            this.texVBO = glGenBuffers();
+            texCoordsBuffer = MemoryUtil.memAllocFloat(texCoords.length);
+            texCoordsBuffer.put(texCoords).flip();
+            glBindBuffer(GL_ARRAY_BUFFER, this.texVBO);
+            glBufferData(GL_ARRAY_BUFFER, texCoordsBuffer, GL_STATIC_DRAW);
             glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
             this.idxVBO = glGenBuffers();
             indicesBuffer = MemoryUtil.memAllocInt(indices.length);
@@ -61,19 +63,17 @@ public class Mesh {
             if (verticesBuffer != null)
                 memFree(verticesBuffer);
                 memFree(indicesBuffer);
-                memFree(colorsBuffer);
+                memFree(texCoordsBuffer);
         }
     }
 
     public void render() {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture.getId());
         glBindVertexArray(VAO);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
 
         glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
         glBindVertexArray(0);
     }
 
@@ -92,7 +92,9 @@ public class Mesh {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDeleteBuffers(posVBO);
         glDeleteBuffers(idxVBO);
-        glDeleteBuffers(colVBO);
+        glDeleteBuffers(texVBO);
+
+        texture.cleanUp();
 
         glBindVertexArray(0);
         glDeleteVertexArrays(VAO);

@@ -55,6 +55,9 @@ public class Window {
         glfwShowWindow(windowID);
         GL.createCapabilities();
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
         glClearColor(0, 0, 0, 0);
     }
 
@@ -85,6 +88,10 @@ public class Window {
     public void update() {
         glfwSwapBuffers(windowID);
         glfwPollEvents();
+    }
+
+    public long getWindowID() {
+        return windowID;
     }
 
     public String getTitle() {

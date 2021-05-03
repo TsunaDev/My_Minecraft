@@ -3,6 +3,7 @@ package game.minecraft;
 import engine.GameItem;
 import engine.Utils;
 import engine.Window;
+import engine.graph.Camera;
 import engine.graph.Mesh;
 import engine.graph.ShaderProgram;
 import engine.graph.Transformation;
@@ -10,6 +11,7 @@ import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -37,29 +39,31 @@ public class Renderer {
         float aspectRatio = (float) window.getWidth() / (float) window.getHeight();
         projection = transformation.getProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
         shaderProgram.createUniform("projectionMatrix");
-        shaderProgram.createUniform("worldMatrix");
+        shaderProgram.createUniform("modelViewMatrix");
         shaderProgram.createUniform("texture_sampler");
 
         window.setClearColor(0,0,0,0);
     }
 
-    public void render(Window window, GameItem[] gameItems) throws Exception {
+    public void render(Window window, Camera camera, ArrayList<GameItem> gameItems) throws Exception {
         clear();
 
         if (window.isResized()) {
-            projection = transformation.getProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
-            shaderProgram.createUniform("projectionMatrix");
             glViewport(0, 0, window.getWidth(), window.getHeight());
             window.setResized(false);
         }
 
         shaderProgram.bind();
+
+        projection = transformation.getProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
         shaderProgram.setUniform("projectionMatrix", projection);
         shaderProgram.setUniform("texture_sampler", 0);
 
+        Matrix4f viewMatrix = transformation.getViewMatrix(camera);
+
         for (GameItem gameItem : gameItems) {
-            Matrix4f worldMatrix = transformation.getWorldMatrix(gameItem.getPos(), gameItem.getRot(), gameItem.getScale());
-            shaderProgram.setUniform("worldMatrix", worldMatrix);
+            Matrix4f modelViewMatrix = transformation.getModelViewMatrix(gameItem, viewMatrix);
+            shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
             gameItem.getMesh().render();
         }
         glBindVertexArray(0);

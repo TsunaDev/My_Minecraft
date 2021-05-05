@@ -1,14 +1,12 @@
 package game.minecraft;
 
-import engine.GameItem;
-import engine.IGameLogic;
-import engine.MouseInput;
-import engine.Window;
+import engine.*;
 import engine.graph.Camera;
 import engine.graph.Mesh;
 import engine.graph.Texture;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.system.CallbackI;
 
 import java.util.ArrayList;
 
@@ -25,12 +23,14 @@ public class DummyGame implements IGameLogic {
     private final Camera camera;
     private final Vector3f cameraMove;
     private ArrayList<GameItem> items;
+    private final NoiseGenerator noiseGenerator;
 
     public DummyGame() {
         this.renderer = new Renderer();
         this.camera = new Camera();
         this.cameraMove = new Vector3f();
         this.items = new ArrayList<>();
+        this.noiseGenerator = new NoiseGenerator();
     }
 
     @Override
@@ -119,6 +119,38 @@ public class DummyGame implements IGameLogic {
                 0.5f, 0.5f,
                 1.0f, 0.5f,
         };
+
+        float[] dirtTexCoords = new float[]{
+                0.5f, 0.0f,
+                0.5f, 0.5f,
+                1.0f, 0.5f,
+                1.0f, 0.0f,
+
+                0.5f, 0.0f,
+                1.0f, 0.0f,
+                0.5f, 0.5f,
+                1.0f, 0.5f,
+
+                // For text coords in top face
+                0.5f, 0.0f,
+                1.0f, 0.0f,
+                0.5f, 0.5f,
+                1.0f, 0.5f,
+
+                // For text coords in right face
+                0.5f, 0.0f,
+                0.5f, 0.5f,
+
+                // For text coords in left face
+                1.0f, 0.0f,
+                1.0f, 0.5f,
+
+                // For text coords in bottom face
+                0.5f, 0.0f,
+                1.0f, 0.0f,
+                0.5f, 0.5f,
+                1.0f, 0.5f,
+        };
         int[] indices = new int[]{
                 // Front face
                 0, 1, 3, 3, 1, 2,
@@ -134,17 +166,16 @@ public class DummyGame implements IGameLogic {
                 4, 5, 7, 7, 6, 4
         };
         Mesh mesh = new Mesh(positions, texCoords, indices, new Texture("textures/grassblock.png"));
-        items.add(new GameItem(mesh));
-        items.get(items.size() - 1).setPos(0, 0, -2);
-        items.add(new GameItem(mesh));
-        items.get(items.size() - 1).setPos(0, 0, -3);
-        items.add(new GameItem(mesh));
-        items.get(items.size() - 1).setPos(1, 0, -3);
-        items.add(new GameItem(mesh));
-        items.get(items.size() - 1).setPos(1, 1, -3);
-        items.add(new GameItem(mesh));
-        items.get(items.size() - 1).setPos(1, 0, -2);
-
+        Mesh meshDirt = new Mesh(positions, dirtTexCoords, indices, new Texture("textures/grassblock.png"));
+        for (int x = 0; x < 100; x++) {
+            for (int z = 0; z < 100; z++) {
+                items.add(new GameItem(mesh));
+                int y = (int) (noiseGenerator.noise(x, 0, z) * 10f);
+                items.get(items.size() - 1).setPos(x, y-64, z);
+                items.add(new GameItem(meshDirt));
+                items.get(items.size() - 1).setPos(x, y - 64-1, z);
+            }
+        }
     }
 
     @Override
@@ -170,7 +201,7 @@ public class DummyGame implements IGameLogic {
 
     @Override
     public void update(float interval, MouseInput mouseInput) {
-       camera.translate(cameraMove.x * 0.05f, cameraMove.y * 0.05f, cameraMove.z * 0.05f);
+       camera.translate(cameraMove.x * 0.1f, cameraMove.y * 0.1f, cameraMove.z * 0.1f);
 
        if (mouseInput.isRightButtonPressed()) {
            Vector2f rot = mouseInput.getDispVec();

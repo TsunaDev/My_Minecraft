@@ -12,6 +12,8 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -45,7 +47,7 @@ public class Renderer {
         window.setClearColor(0,0,0,0);
     }
 
-    public void render(Window window, Camera camera, ArrayList<GameItem> gameItems) throws Exception {
+    public void render(Window window, Camera camera, ArrayList<Chunk> chunks, Map<BlockType, Mesh> meshMap) throws Exception {
         clear();
 
         if (window.isResized()) {
@@ -61,11 +63,21 @@ public class Renderer {
 
         Matrix4f viewMatrix = transformation.getViewMatrix(camera);
 
-        for (GameItem gameItem : gameItems) {
-            Matrix4f modelViewMatrix = transformation.getModelViewMatrix(gameItem, viewMatrix);
-            shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
-            gameItem.getMesh().render();
+        for (Chunk chunk : chunks) {
+            ArrayList<Block> drawables = chunk.getDrawables();
+            for (Map.Entry<BlockType, Mesh> blockTypeMeshEntry : meshMap.entrySet()) {
+                blockTypeMeshEntry.getValue().start();
+                for (Block block : drawables) {
+                    if (blockTypeMeshEntry.getKey() == block.getType()) {
+                        Matrix4f modelViewMatrix = transformation.getModelViewMatrix(block, viewMatrix);
+                        shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
+                        blockTypeMeshEntry.getValue().render();
+                    }
+                }
+                blockTypeMeshEntry.getValue().end();
+            }
         }
+
         glBindVertexArray(0);
         shaderProgram.unbind();
     }

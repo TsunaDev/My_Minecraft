@@ -1,16 +1,13 @@
 package engine;
 
-import engine.graph.Mesh;
 import org.joml.Vector3f;
 
 public class GameItem {
-    private final Mesh mesh;
     private final Vector3f pos;
     private final Vector3f rot;
     private float scale;
 
-    public GameItem(Mesh mesh) {
-        this.mesh = mesh;
+    public GameItem() {
         this.pos = new Vector3f(0, 0, 0);
         this.rot = new Vector3f(0, 0, 0);
         this.scale = 1;
@@ -43,9 +40,5 @@ public class GameItem {
 
     public void setScale(float scale) {
         this.scale = scale;
-    }
-
-    public Mesh getMesh() {
-        return mesh;
     }
 }

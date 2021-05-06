@@ -9,7 +9,10 @@ import org.joml.Vector3f;
 import org.lwjgl.system.CallbackI;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+import static game.minecraft.BlockType.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.glViewport;
 
@@ -24,10 +27,13 @@ public class DummyGame implements IGameLogic {
     private final Vector3f cameraMove;
     private ArrayList<GameItem> items;
     private final NoiseGenerator noiseGenerator;
+    private ArrayList<Chunk> chunks;
+    private Map<BlockType, Mesh> meshMap;
 
     public DummyGame() {
         this.renderer = new Renderer();
         this.camera = new Camera();
+        camera.setPosition(0, 64f, 0);
         this.cameraMove = new Vector3f();
         this.items = new ArrayList<>();
         this.noiseGenerator = new NoiseGenerator();
@@ -167,15 +173,62 @@ public class DummyGame implements IGameLogic {
         };
         Mesh mesh = new Mesh(positions, texCoords, indices, new Texture("textures/grassblock.png"));
         Mesh meshDirt = new Mesh(positions, dirtTexCoords, indices, new Texture("textures/grassblock.png"));
-        for (int x = 0; x < 100; x++) {
-            for (int z = 0; z < 100; z++) {
-                items.add(new GameItem(mesh));
-                int y = (int) (noiseGenerator.noise(x, 0, z) * 10f);
-                items.get(items.size() - 1).setPos(x, y-64, z);
-                items.add(new GameItem(meshDirt));
-                items.get(items.size() - 1).setPos(x, y - 64-1, z);
-            }
-        }
+        meshMap = new HashMap<BlockType, Mesh>();
+        ArrayList<GameItem> gameItems = new ArrayList<>();
+        meshMap.put(GRASS, mesh);
+        meshMap.put(DIRT, meshDirt);
+        chunks = new ArrayList<>();
+        chunks.add(new Chunk(0, 0, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(16, 0, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(16, 16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(0, 16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+
+        chunks.add(new Chunk(-16, -16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(-32, -16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(-32, -32, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(-16, -32, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+
+        chunks.add(new Chunk(-32, 0, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(-16, 0, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(-32, 16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(-16, 16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+
+        chunks.add(new Chunk(0, -32, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(16, -32, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(16, -16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
+        chunks.add(new Chunk(0, -16, noiseGenerator));
+        chunks.get(chunks.size() - 1).init();
+        chunks.get(chunks.size() - 1).generate();
     }
 
     @Override
@@ -211,13 +264,14 @@ public class DummyGame implements IGameLogic {
 
     public void render(Window window) throws Exception {
         window.setClearColor(colorR, colorG, colorB, 1f);
-        renderer.render(window, camera, items);
+        renderer.render(window, camera, chunks, meshMap);
     }
 
     @Override
     public void cleanUp() {
         renderer.cleanUp();
-        for (GameItem item : items)
-            item.getMesh().cleanUp();
+        for (Map.Entry<BlockType, Mesh> entry : meshMap.entrySet()) {
+            entry.getValue().cleanUp();
+        }
     }
 }

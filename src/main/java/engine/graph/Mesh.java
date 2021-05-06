@@ -67,14 +67,21 @@ public class Mesh {
         }
     }
 
-    public void render() {
+    public void start() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture.getId());
         glBindVertexArray(VAO);
+    }
+
+    public void end() {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindVertexArray(0);
+    }
+
+    public void render() {
 
         glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 
-        glBindVertexArray(0);
     }
 
     public int getVAO() {

@@ -57,7 +57,6 @@ public class Window {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-
         glClearColor(0, 0, 0, 0);
     }
 
@@ -79,6 +78,9 @@ public class Window {
 
     public boolean isKeyPressed(int key) {
         return glfwGetKey(windowID, key) == GLFW_PRESS;
+    }
+    public boolean isKeyReleased(int key) {
+        return glfwGetKey(windowID, key) == GLFW_RELEASE;
     }
 
     public void clear() {

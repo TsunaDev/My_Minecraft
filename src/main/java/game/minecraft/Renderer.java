@@ -1,6 +1,5 @@
 package game.minecraft;
 
-import engine.GameItem;
 import engine.Utils;
 import engine.Window;
 import engine.graph.Camera;
@@ -8,15 +7,12 @@ import engine.graph.Mesh;
 import engine.graph.ShaderProgram;
 import engine.graph.Transformation;
 import org.joml.Matrix4f;
-import org.lwjgl.system.MemoryUtil;
 
-import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
 public class Renderer {
@@ -71,7 +67,9 @@ public class Renderer {
                     if (blockTypeMeshEntry.getKey() == block.getType()) {
                         Matrix4f modelViewMatrix = transformation.getModelViewMatrix(block, viewMatrix);
                         shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
-                        blockTypeMeshEntry.getValue().render();
+                        int[] indices = block.getVisibleIndices();
+                        if (indices != null && indices.length > 0)
+                            blockTypeMeshEntry.getValue().renderFaces(indices);
                     }
                 }
                 blockTypeMeshEntry.getValue().end();

@@ -12,9 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static engine.Utils.fromPixelsToPercentage;
 import static game.minecraft.BlockType.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL11.*;
 
 public class DummyGame implements IGameLogic {
     private Renderer renderer;
@@ -29,6 +30,8 @@ public class DummyGame implements IGameLogic {
     private final NoiseGenerator noiseGenerator;
     private ArrayList<Chunk> chunks;
     private Map<BlockType, Mesh> meshMap;
+    private boolean wireframe = false;
+    private boolean wPressed = false;
 
     public DummyGame() {
         this.renderer = new Renderer();
@@ -45,6 +48,7 @@ public class DummyGame implements IGameLogic {
 
 
         float[] positions = new float[] {
+                // Front Face
                 // V0
                 -0.5f, 0.5f, 0.5f,
                 // V1
@@ -53,6 +57,8 @@ public class DummyGame implements IGameLogic {
                 0.5f, -0.5f, 0.5f,
                 // V3
                 0.5f, 0.5f, 0.5f,
+
+                // Back Face
                 // V4
                 -0.5f, 0.5f, -0.5f,
                 // V5
@@ -77,106 +83,203 @@ public class DummyGame implements IGameLogic {
                 0.5f, 0.5f, 0.5f,
                 // V13: V2 repeated
                 0.5f, -0.5f, 0.5f,
+                // V14
+                0.5f, 0.5f, -0.5f,
+                // V15
+                0.5f, -0.5f, -0.5f,
 
                 // For text coords in left face
-                // V14: V0 repeated
+                // V16: V0 repeated
                 -0.5f, 0.5f, 0.5f,
-                // V15: V1 repeated
+                // V17: V1 repeated
                 -0.5f, -0.5f, 0.5f,
+                // V18
+                -0.5f, 0.5f, -0.5f,
+                // V19
+                -0.5f, -0.5f, -0.5f,
 
                 // For text coords in bottom face
-                // V16: V6 repeated
+                // V20: V6 repeated
                 -0.5f, -0.5f, -0.5f,
-                // V17: V7 repeated
+                // V21: V7 repeated
                 0.5f, -0.5f, -0.5f,
-                // V18: V1 repeated
+                // V22: V1 repeated
                 -0.5f, -0.5f, 0.5f,
-                // V19: V2 repeated
+                // V23: V2 repeated
                 0.5f, -0.5f, 0.5f,
         };
         float[] texCoords = new float[]{
-                0.0f, 0.0f,
-                0.0f, 0.5f,
-                0.5f, 0.5f,
-                0.5f, 0.0f,
+                23f, 2f,
+                23f, 3f,
+                24f, 3f,
+                24f, 2f,
 
-                0.0f, 0.0f,
-                0.5f, 0.0f,
-                0.0f, 0.5f,
-                0.5f, 0.5f,
+                23f, 2f,
+                24f, 2f,
+                23f, 3f,
+                24f, 3f,
 
                 // For text coords in top face
-                0.0f, 0.5f,
-                0.5f, 0.5f,
-                0.0f, 1.0f,
-                0.5f, 1.0f,
+                29f, 2f,
+                30f, 2f,
+                29f, 3f,
+                30f, 3f,
 
                 // For text coords in right face
-                0.0f, 0.0f,
-                0.0f, 0.5f,
+                23f, 2f,
+                23f, 3f,
+                24f, 2f,
+                24f, 3f,
 
                 // For text coords in left face
-                0.5f, 0.0f,
-                0.5f, 0.5f,
+                24f, 2f,
+                24f, 3f,
+                23f, 2f,
+                23f, 3f,
 
                 // For text coords in bottom face
-                0.5f, 0.0f,
-                1.0f, 0.0f,
-                0.5f, 0.5f,
-                1.0f, 0.5f,
+                20f, 2f,
+                21f, 2f,
+                20f, 3f,
+                21f, 3f,
         };
 
         float[] dirtTexCoords = new float[]{
-                0.5f, 0.0f,
-                0.5f, 0.5f,
-                1.0f, 0.5f,
-                1.0f, 0.0f,
+                20f, 2f,
+                20f, 3f,
+                21f, 3f,
+                21f, 2f,
 
-                0.5f, 0.0f,
-                1.0f, 0.0f,
-                0.5f, 0.5f,
-                1.0f, 0.5f,
+                20f, 2f,
+                21f, 2f,
+                20f, 3f,
+                21f, 3f,
 
                 // For text coords in top face
-                0.5f, 0.0f,
-                1.0f, 0.0f,
-                0.5f, 0.5f,
-                1.0f, 0.5f,
+                20f, 2f,
+                21f, 2f,
+                20f, 3f,
+                21f, 3f,
 
                 // For text coords in right face
-                0.5f, 0.0f,
-                0.5f, 0.5f,
+                20f, 2f,
+                20f, 3f,
+                21f, 2f,
+                21f, 3f,
 
                 // For text coords in left face
-                1.0f, 0.0f,
-                1.0f, 0.5f,
+                21f, 2f,
+                21f, 3f,
+                20f, 2f,
+                20f, 3f,
 
                 // For text coords in bottom face
-                0.5f, 0.0f,
-                1.0f, 0.0f,
-                0.5f, 0.5f,
-                1.0f, 0.5f,
+                20f, 2f,
+                21f, 2f,
+                20f, 3f,
+                21f, 3f,
+        };
+        float[] stoneTexCoords = new float[]{
+                3f, 21f,
+                3f, 22f,
+                4f, 22f,
+                4f, 21f,
+
+                3f, 21f,
+                4f, 21f,
+                3f, 22f,
+                4f, 22f,
+
+                // For text coords in top face
+                3f, 21f,
+                4f, 21f,
+                3f, 22f,
+                4f, 22f,
+
+                // For text coords in right face
+                3f, 21f,
+                3f, 22f,
+                4f, 21f,
+                4f, 22f,
+
+                // For text coords in left face
+                4f, 21f,
+                4f, 22f,
+                3f, 21f,
+                3f, 22f,
+
+                // For text coords in bottom face
+                3f, 21f,
+                4f, 21f,
+                3f, 22f,
+                4f, 22f,
         };
         int[] indices = new int[]{
                 // Front face
-                0, 1, 3, 3, 1, 2,
-                // Top Face
-                8, 10, 11, 9, 8, 11,
-                // Right face
-                12, 13, 7, 5, 12, 7,
-                // Left face
-                14, 4, 6, 6, 15, 14,
-                // Bottom face
-                16, 17, 19, 19, 18, 16,
+                0, 1, 3,
+                3, 1, 2,
                 // Back face
-                4, 5, 7, 7, 6, 4
+                4, 5, 7,
+                7, 6, 4,
+                // Top Face
+                8, 10, 11,
+                9, 8, 11,
+                // Right face
+                12, 13, 15,
+                14, 12, 15,
+                // Left face
+                16, 18, 19,
+                19, 17, 16,
+                // Bottom face
+                20, 21, 23,
+                23, 22, 20
         };
-        Mesh mesh = new Mesh(positions, texCoords, indices, new Texture("textures/grassblock.png"));
-        Mesh meshDirt = new Mesh(positions, dirtTexCoords, indices, new Texture("textures/grassblock.png"));
+
+        float[] normals = new float[] {
+                // Front face
+                0f,0f,-1f,
+                0f,0f,-1f,
+                0f,0f,-1f,
+                0f,0f,-1f,
+
+                // Back face
+                0f,0f,1f,
+                0f,0f,1f,
+                0f,0f,1f,
+                0f,0f,1f,
+
+                // Top face
+                0f,1f,0f,
+                0f,1f,0f,
+                0f,1f,0f,
+                0f,1f,0f,
+
+                // Right face
+                1f, 0f, 0f,
+                1f, 0f, 0f,
+                1f, 0f, 0f,
+                1f, 0f, 0f,
+
+                // Left face
+                -1f, 0f, 0f,
+                -1f, 0f, 0f,
+                -1f, 0f, 0f,
+                -1f, 0f, 0f,
+
+                // Bottom face
+                0f, -1f, 0f,
+                0f, -1f, 0f,
+                0f, -1f, 0f,
+                0f, -1f, 0f
+        };
+        Texture text = new Texture("textures/atlas2.png");
+        Mesh mesh = new Mesh(positions, fromPixelsToPercentage(texCoords), indices, text);
+        Mesh meshDirt = new Mesh(positions, fromPixelsToPercentage(dirtTexCoords), indices, text);
+        Mesh meshStone = new Mesh(positions, fromPixelsToPercentage(stoneTexCoords), indices, text);
         meshMap = new HashMap<BlockType, Mesh>();
-        ArrayList<GameItem> gameItems = new ArrayList<>();
         meshMap.put(GRASS, mesh);
         meshMap.put(DIRT, meshDirt);
+        meshMap.put(STONE, meshStone);
         chunks = new ArrayList<>();
         chunks.add(new Chunk(0, 0, noiseGenerator));
         chunks.get(chunks.size() - 1).init();
@@ -229,6 +332,10 @@ public class DummyGame implements IGameLogic {
         chunks.add(new Chunk(0, -16, noiseGenerator));
         chunks.get(chunks.size() - 1).init();
         chunks.get(chunks.size() - 1).generate();
+
+        for (Chunk chunk : chunks) {
+            chunk.updateNeighbors(chunks);
+        }
     }
 
     @Override
@@ -243,10 +350,20 @@ public class DummyGame implements IGameLogic {
             cameraMove.x = -1;
         else if (window.isKeyPressed(GLFW_KEY_D))
             cameraMove.x = 1;
-        if (window.isKeyPressed(GLFW_KEY_Q))
+        if (window.isKeyPressed(GLFW_KEY_SPACE))
             cameraMove.y = 1;
-        else if (window.isKeyPressed(GLFW_KEY_E))
+        else if (window.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
             cameraMove.y = -1;
+        if (window.isKeyPressed(GLFW_KEY_Z))
+            wPressed = true;
+        if (wPressed && window.isKeyReleased(GLFW_KEY_Z)) {
+            if (!wireframe)
+                glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+            else
+                glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+            wireframe = !wireframe;
+            wPressed = false;
+        }
 
     }
 

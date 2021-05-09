@@ -2,11 +2,10 @@ package game.minecraft;
 
 import engine.Utils;
 import engine.Window;
-import engine.graph.Camera;
-import engine.graph.Mesh;
-import engine.graph.ShaderProgram;
-import engine.graph.Transformation;
+import engine.graph.*;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -22,9 +21,11 @@ public class Renderer {
     private Transformation transformation;
     private Matrix4f projection;
     private ShaderProgram shaderProgram;
+    private float specularPower;
 
     public Renderer() {
         this.transformation = new Transformation();
+        specularPower = 10f;
     }
 
     void init(Window window) throws Exception {
@@ -39,11 +40,15 @@ public class Renderer {
         shaderProgram.createUniform("projectionMatrix");
         shaderProgram.createUniform("modelViewMatrix");
         shaderProgram.createUniform("texture_sampler");
+        shaderProgram.createUniform("ambientLight");
+        shaderProgram.createUniform("specularPower");
+        shaderProgram.createMaterialUniform("material");
+        shaderProgram.createPointLightUniform("pointLight");
 
         window.setClearColor(0,0,0,0);
     }
 
-    public void render(Window window, Camera camera, ArrayList<Chunk> chunks, Map<BlockType, Mesh> meshMap) throws Exception {
+    public void render(Window window, Camera camera, ArrayList<Chunk> chunks, Map<BlockType, Mesh> meshMap, Vector3f ambientLight, PointLight pointLight) throws Exception {
         clear();
 
         if (window.isResized()) {
@@ -55,13 +60,27 @@ public class Renderer {
 
         projection = transformation.getProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
         shaderProgram.setUniform("projectionMatrix", projection);
-        shaderProgram.setUniform("texture_sampler", 0);
 
         Matrix4f viewMatrix = transformation.getViewMatrix(camera);
+
+        shaderProgram.setUniform("ambientLight", ambientLight);
+        shaderProgram.setUniform("specularPower", specularPower);
+        PointLight currPointLight = new PointLight(pointLight);
+        Vector3f lightPos = currPointLight.getPos();
+        Vector4f aux = new Vector4f(lightPos, 1f);
+        aux.mul(viewMatrix);
+        lightPos.x = aux.x;
+        lightPos.y = aux.y;
+        lightPos.z = aux.z;
+        shaderProgram.setUniform("pointLight", currPointLight);
+
+        shaderProgram.setUniform("texture_sampler", 0);
+
 
         for (Chunk chunk : chunks) {
             ArrayList<Block> drawables = chunk.getDrawables();
             for (Map.Entry<BlockType, Mesh> blockTypeMeshEntry : meshMap.entrySet()) {
+                shaderProgram.setUniform("material", blockTypeMeshEntry.getValue().getMaterial());
                 blockTypeMeshEntry.getValue().start();
                 for (Block block : drawables) {
                     if (blockTypeMeshEntry.getKey() == block.getType()) {

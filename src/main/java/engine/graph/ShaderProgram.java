@@ -49,6 +49,12 @@ public class ShaderProgram {
         createUniform(uniformName + ".reflectance");
     }
 
+    public void createDirLightUniform(String uniformName) throws Exception {
+        createUniform(uniformName + ".colour");
+        createUniform(uniformName + ".direction");
+        createUniform(uniformName + ".intensity");
+    }
+
     public void setUniform(String uniformName, Matrix4f value) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             glUniformMatrix4fv(uniforms.get(uniformName), false, value.get(stack.mallocFloat(16)));
@@ -89,12 +95,17 @@ public class ShaderProgram {
         setUniform(uniformName + ".reflectance", material.getReflectance());
     }
 
+    public void setUniform(String uniformName, DirectionalLight light) {
+        setUniform(uniformName + ".colour", light.getColor());
+        setUniform(uniformName + ".direction", light.getDirection());
+        setUniform(uniformName + ".intensity", light.getIntensity());
+    }
+
     public void createVertexShader(String shaderCode) throws Exception {
         vertexShaderID = createShader(shaderCode, GL_VERTEX_SHADER);
     }
 
     public void createFragmentShader(String shaderCode) throws Exception {
-        System.out.println(shaderCode);
         fragmentShaderID = createShader(shaderCode, GL_FRAGMENT_SHADER);
     }
 

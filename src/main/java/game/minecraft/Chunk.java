@@ -33,6 +33,15 @@ public class Chunk {
         this.noiseGenerator = noiseGenerator;
     }
 
+    public static boolean chunkExists(ArrayList<Chunk> chunks, int offsetX, int offsetZ) {
+        for (Chunk chunk : chunks) {
+            if (chunk.getOffsetX() == offsetX && chunk.getOffsetZ() == offsetZ)
+                return true;
+        }
+        return false;
+    }
+
+
     public void updateNeighbors(ArrayList<Chunk> chunks) {
         for (Chunk chunk : chunks) {
             int x = chunk.getOffsetX();

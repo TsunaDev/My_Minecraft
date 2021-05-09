@@ -7,7 +7,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -21,6 +20,7 @@ public class Renderer {
     private Transformation transformation;
     private Matrix4f projection;
     private ShaderProgram shaderProgram;
+    private ShaderProgram depthShaderProgram;
     private float specularPower;
 
     public Renderer() {
@@ -29,14 +29,22 @@ public class Renderer {
     }
 
     void init(Window window) throws Exception {
+        setupSceneShader();
+        setupDepthShader();
+
+        projection = transformation.getProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
+
+
+        window.setClearColor(0,0,0,0);
+    }
+
+    private void setupSceneShader() throws Exception {
         shaderProgram = new ShaderProgram();
 
-        shaderProgram.createVertexShader(Utils.loadResource("/vertex.vs"));
-        shaderProgram.createFragmentShader(Utils.loadResource("/fragment.fs"));
+        shaderProgram.createVertexShader(Utils.loadResource("/scene.vs"));
+        shaderProgram.createFragmentShader(Utils.loadResource("/scene.fs"));
         shaderProgram.link();
 
-        float aspectRatio = (float) window.getWidth() / (float) window.getHeight();
-        projection = transformation.getProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
         shaderProgram.createUniform("projectionMatrix");
         shaderProgram.createUniform("modelViewMatrix");
         shaderProgram.createUniform("texture_sampler");
@@ -44,11 +52,20 @@ public class Renderer {
         shaderProgram.createUniform("specularPower");
         shaderProgram.createMaterialUniform("material");
         shaderProgram.createPointLightUniform("pointLight");
-
-        window.setClearColor(0,0,0,0);
+        shaderProgram.createDirLightUniform("directionalLight");
     }
 
-    public void render(Window window, Camera camera, ArrayList<Chunk> chunks, Map<BlockType, Mesh> meshMap, Vector3f ambientLight, PointLight pointLight) throws Exception {
+    private void setupDepthShader() throws Exception {
+        depthShaderProgram = new ShaderProgram();
+        depthShaderProgram.createVertexShader(Utils.loadResource("/depth.vs"));
+        depthShaderProgram.createFragmentShader(Utils.loadResource("/depth.fs"));
+        depthShaderProgram.link();
+
+        depthShaderProgram.createUniform("modelLightViewMatrix");
+        depthShaderProgram.createUniform("orthoProjectionMatrix");
+    }
+
+    public void render(Window window, Camera camera, Scene scene) throws Exception {
         clear();
 
         if (window.isResized()) {
@@ -63,9 +80,9 @@ public class Renderer {
 
         Matrix4f viewMatrix = transformation.getViewMatrix(camera);
 
-        shaderProgram.setUniform("ambientLight", ambientLight);
+        shaderProgram.setUniform("ambientLight", scene.getAmbientLight());
         shaderProgram.setUniform("specularPower", specularPower);
-        PointLight currPointLight = new PointLight(pointLight);
+        PointLight currPointLight = new PointLight(scene.getPointLight());
         Vector3f lightPos = currPointLight.getPos();
         Vector4f aux = new Vector4f(lightPos, 1f);
         aux.mul(viewMatrix);
@@ -73,13 +90,17 @@ public class Renderer {
         lightPos.y = aux.y;
         lightPos.z = aux.z;
         shaderProgram.setUniform("pointLight", currPointLight);
-
+        DirectionalLight currDirLight = new DirectionalLight(scene.getSunLight());
+        Vector4f dir = new Vector4f(currDirLight.getDirection(), 0);
+        dir.mul(viewMatrix);
+        currDirLight.setDirection(new Vector3f(dir.x, dir.y, dir.z));
+        shaderProgram.setUniform("directionalLight", currDirLight);
         shaderProgram.setUniform("texture_sampler", 0);
 
 
-        for (Chunk chunk : chunks) {
+        for (Chunk chunk : scene.getChunks()) {
             ArrayList<Block> drawables = chunk.getDrawables();
-            for (Map.Entry<BlockType, Mesh> blockTypeMeshEntry : meshMap.entrySet()) {
+            for (Map.Entry<BlockType, Mesh> blockTypeMeshEntry : scene.getMeshMap().entrySet()) {
                 shaderProgram.setUniform("material", blockTypeMeshEntry.getValue().getMaterial());
                 blockTypeMeshEntry.getValue().start();
                 for (Block block : drawables) {

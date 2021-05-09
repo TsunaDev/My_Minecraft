@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.stb.STBImage.*;
 
@@ -13,25 +15,10 @@ public class Texture {
 
     private final int id;
 
+    private int width;
+    private int height;
+
     public Texture(String fileName) throws Exception {
-        this(loadTexture(fileName));
-    }
-
-    public Texture(int id) {
-        this.id = id;
-    }
-
-    public void bind() {
-        glBindTexture(GL_TEXTURE_2D, id);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    private static int loadTexture(String fileName) throws Exception {
-        int width;
-        int height;
         ByteBuffer buf;
         // Load Texture file
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -49,6 +36,37 @@ public class Texture {
             height = h.get();
         }
 
+        this.id = createTexture(buf);
+        stbi_image_free(buf);
+    }
+
+    public Texture(int width, int height, int pixelFormat) throws Exception {
+        this.id = glGenTextures();
+        this.width = width;
+        this.height = height;
+
+        glBindTexture(GL_TEXTURE_2D, this.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, this.width, this.height, 0, pixelFormat, GL_FLOAT, (ByteBuffer) null);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    }
+
+    public Texture(int id) {
+        this.id = id;
+    }
+
+    public void bind() {
+        glBindTexture(GL_TEXTURE_2D, id);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    private int createTexture(ByteBuffer buf) throws Exception {
         // Create a new OpenGL texture
         int textureId = glGenTextures();
         // Bind the texture
@@ -64,7 +82,6 @@ public class Texture {
         // Generate Mip Map
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        stbi_image_free(buf);
 
         return textureId;
     }

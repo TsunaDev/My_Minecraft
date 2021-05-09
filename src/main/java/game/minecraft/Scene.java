@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static game.minecraft.BlockType.AIR;
-import static game.minecraft.BlockType.GRASS;
 
 public class Scene {
     private final ArrayList<Chunk> chunks;
@@ -85,7 +84,9 @@ public class Scene {
         PointLight.Attenuation attenuation = new PointLight.Attenuation(1.5f, 0f, 0f);
         pointLight.setAttenuation(attenuation);
 
-        sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(-1, 0, 0), 0.9f);
+        sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(0, 1, 1), 0.9f);
+        sunLight.setShadowPosMult(5);
+        sunLight.setOrthoCoords(-8.0f * 16f, 8.0f * 16f, -8.0f * 16f, 8f * 16f, -8.0f *16f, 8f*16f);
     }
 
     public void update() {

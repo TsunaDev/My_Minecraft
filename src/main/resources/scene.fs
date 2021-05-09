@@ -3,6 +3,8 @@
 in vec2 outTexCoord;
 in vec3 mvVertexNormal;
 in vec3 mvVertexPos;
+in vec4 mlightviewVertexPos;
+in mat4 outModelViewMatrix;
 
 out vec4 fragColor;
 
@@ -44,6 +46,7 @@ uniform float specularPower;
 uniform Material material;
 uniform PointLight pointLight;
 uniform DirectionalLight directionalLight;
+uniform sampler2D shadowMap;
 
 vec4 ambientC;
 vec4 diffuseC;
@@ -103,12 +106,33 @@ vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal)
     return calcLightColour(light.colour, light.intensity, position, normalize(light.direction), normal);
 }
 
+float calcShadow(vec4 position)
+{
+    float shadowFactor = 1.0;
+    vec3 projCoords = position.xyz;
+    // Transform from screen coordinates to texture coordinates
+    projCoords = projCoords * 0.5 + 0.5;
+    if ( projCoords.z < texture(shadowMap, projCoords.xy).r )
+    {
+        // Current fragment is not in shade
+        shadowFactor = 0;
+    }
+
+    return 1 - shadowFactor;
+}
+
 void main()
 {
     setupColours(material, outTexCoord);
 
+
     vec4 diffuseSpecularComp = calcDirectionalLight(directionalLight, mvVertexPos, mvVertexNormal);
+
     diffuseSpecularComp += calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
 
-    fragColor = ambientC * vec4(ambientLight, 1) + diffuseSpecularComp;
+
+
+    float shadow = calcShadow(mlightviewVertexPos);
+    fragColor = clamp(ambientC * vec4(ambientLight, 1) + diffuseSpecularComp * shadow, 0, 1);
+
 }

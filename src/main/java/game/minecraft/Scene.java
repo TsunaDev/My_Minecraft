@@ -84,9 +84,10 @@ public class Scene {
         PointLight.Attenuation attenuation = new PointLight.Attenuation(1.5f, 0f, 0f);
         pointLight.setAttenuation(attenuation);
 
-        sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(0, 1, 1), 0.9f);
+        sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(-1, 0, 0), 0.9f);
         sunLight.setShadowPosMult(5);
-        sunLight.setOrthoCoords(-8.0f * 16f, 8.0f * 16f, -8.0f * 16f, 8f * 16f, -8.0f *16f, 8f*16f);
+        //sunLight.setOrthoCoords(-8.0f * 16f, 8.0f * 16f, -8.0f * 16f, 8f * 16f, -8.0f *16f, 8f*16f);
+        sunLight.setOrthoCoords(-10*10f, 10*10f, -10*10f, 10*10f, -6000f, 500f);
     }
 
     public void update() {

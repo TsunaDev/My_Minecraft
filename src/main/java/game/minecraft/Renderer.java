@@ -78,7 +78,7 @@ public class Renderer {
         renderDepthMap(window, camera, scene);
 
         glViewport(0, 0, window.getWidth(), window.getHeight());
-        projection = transformation.updateProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
+        transformation.updateProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
 
         renderScene(window, camera, scene);
 
@@ -127,8 +127,11 @@ public class Renderer {
     public void renderScene(Window window, Camera camera, Scene scene) {
         shaderProgram.bind();
 
-
-        shaderProgram.setUniform("projectionMatrix", projection);
+        Matrix4f projectionMatrix = transformation.getProjectionMatrix();
+        shaderProgram.setUniform("projectionMatrix", projectionMatrix);
+        Matrix4f orthoProjMatrix = transformation.getOrthoProjectionMatrix();
+        shaderProgram.setUniform("orthoProjectionMatrix", orthoProjMatrix);
+        Matrix4f lightViewMatrix = transformation.getLightViewMatrix();
 
         Matrix4f viewMatrix = transformation.updateViewMatrix(camera);
 
@@ -148,17 +151,23 @@ public class Renderer {
         currDirLight.setDirection(new Vector3f(dir.x, dir.y, dir.z));
         shaderProgram.setUniform("directionalLight", currDirLight);
         shaderProgram.setUniform("texture_sampler", 0);
+        shaderProgram.setUniform("shadowMap", 2);
 
 
         for (Chunk chunk : scene.getChunks()) {
             ArrayList<Block> drawables = chunk.getDrawables();
             for (Map.Entry<BlockType, Mesh> blockTypeMeshEntry : scene.getMeshMap().entrySet()) {
                 shaderProgram.setUniform("material", blockTypeMeshEntry.getValue().getMaterial());
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, shadowMap.getDepthMapTexture().getId());
                 blockTypeMeshEntry.getValue().start();
                 for (Block block : drawables) {
                     if (blockTypeMeshEntry.getKey() == block.getType()) {
+
                         Matrix4f modelViewMatrix = transformation.buildModelViewMatrix(block, viewMatrix);
                         shaderProgram.setUniform("modelViewMatrix", modelViewMatrix);
+                        Matrix4f modelLightViewMatrix = transformation.buildModelLightViewMatrix(block, lightViewMatrix);
+                        shaderProgram.setUniform("modelLightViewMatrix", modelLightViewMatrix);
                         int[] indices = block.getVisibleIndices();
                         if (indices != null && indices.length > 0)
                             blockTypeMeshEntry.getValue().renderFaces(indices);

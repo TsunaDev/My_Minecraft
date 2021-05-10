@@ -18,12 +18,13 @@ public class Scene {
     private Vector3f ambientLight;
     private PointLight pointLight;
     private DirectionalLight sunLight;
+    public float lightInc = 0.11f;
 
     public Scene() {
         this.meshMap = new HashMap<>();
         this.chunks = new ArrayList<>();
         this.noiseGenerator = new NoiseGenerator();
-        this.lightAngle = -90f;
+        this.lightAngle = -10f;
     }
 
     public void initMeshMap() throws Exception {
@@ -84,33 +85,42 @@ public class Scene {
         PointLight.Attenuation attenuation = new PointLight.Attenuation(1.5f, 0f, 0f);
         pointLight.setAttenuation(attenuation);
 
-        sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(-1, 0, 0), 0.9f);
-        sunLight.setShadowPosMult(5);
+        sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(-1, 0, 0), 1f);
+        sunLight.setShadowPosMult(50);
         //sunLight.setOrthoCoords(-8.0f * 16f, 8.0f * 16f, -8.0f * 16f, 8f * 16f, -8.0f *16f, 8f*16f);
-        sunLight.setOrthoCoords(-10*10f, 10*10f, -10*10f, 10*10f, -6000f, 500f);
+        sunLight.setOrthoCoords(-50f, 50f, -50f, 50f, -1f, 50f);
     }
 
     public void update() {
-        lightAngle += 0.11f;
-        if (lightAngle > 90) {
-            sunLight.setIntensity(0);
-            if (lightAngle >= 120) {
-                lightAngle = -90;
-            }
-        } else if (lightAngle <= -80 || lightAngle >= 80) {
-            float factor = 1 - (float) (Math.abs(lightAngle) - 80) / 10.0f;
-            sunLight.setIntensity(factor);
-            sunLight.getColor().y = Math.max(factor, 0.9f);
-            sunLight.getColor().z = Math.max(factor, 0.5f);
-        } else {
-            sunLight.setIntensity(0.9f);
-            sunLight.getColor().x = 1;
-            sunLight.getColor().y = 1;
-            sunLight.getColor().z = 1;
+        lightAngle += lightInc;
+        if (lightAngle <= 0) {
+            sunLight.setIntensity((lightAngle + 10f) / 10f);
         }
-        double angRad = Math.toRadians(lightAngle);
-        sunLight.getDirection().x = (float) Math.sin(angRad);
-        sunLight.getDirection().y = (float) Math.cos(angRad);
+        if (lightAngle > 180) {
+            sunLight.setIntensity((1f - (lightAngle - 180f) / 10f));
+            if (lightAngle > 190 && lightAngle <= 250) {
+                DirectionalLight.OrthoCoords ortho = sunLight.getOrthoCoords();
+                ortho.far = 0;
+                sunLight.setOrthoCoords(ortho.left, ortho.right, ortho.bottom, ortho.top, ortho.near, ortho.far);
+                sunLight.setDirection(new Vector3f(0, 1, 0));
+            }
+            else if (lightAngle > 250) {
+                lightAngle = -10;
+                DirectionalLight.OrthoCoords ortho = sunLight.getOrthoCoords();
+                ortho.far = 50f;
+                sunLight.setOrthoCoords(ortho.left, ortho.right, ortho.bottom, ortho.top, ortho.near, ortho.far);
+            }
+        } else {
+            float zValue = (float) Math.cos(Math.toRadians(lightAngle));
+            float yValue = (float) Math.sin(Math.toRadians(lightAngle));
+            Vector3f lightDirection = sunLight.getDirection();
+            lightDirection.x = 0;
+            lightDirection.y = yValue;
+            lightDirection.z = zValue;
+            lightDirection.normalize();
+            System.out.println(Math.sqrt((lightDirection.y * lightDirection.y) + (lightDirection.z * lightDirection.z)));
+            float lightAngle = (float) Math.toDegrees(Math.acos(lightDirection.z));
+        }
     }
 
     public DirectionalLight getSunLight() {

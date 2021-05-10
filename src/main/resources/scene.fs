@@ -112,7 +112,8 @@ float calcShadow(vec4 position)
     vec3 projCoords = position.xyz;
     // Transform from screen coordinates to texture coordinates
     projCoords = projCoords * 0.5 + 0.5;
-    if ( projCoords.z < texture(shadowMap, projCoords.xy).r )
+    float bias = 0.05;
+    if ( projCoords.z - bias < texture(shadowMap, projCoords.xy).r )
     {
         // Current fragment is not in shade
         shadowFactor = 0;

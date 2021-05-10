@@ -204,16 +204,16 @@ public class Block extends GameItem {
 
     private static final float[] normals = new float[] {
             // Front face
-            0f,0f,-1f,
-            0f,0f,-1f,
-            0f,0f,-1f,
-            0f,0f,-1f,
+            0f,0f,1f,
+            0f,0f,1f,
+            0f,0f,1f,
+            0f,0f,1f,
 
             // Back face
-            0f,0f,1f,
-            0f,0f,1f,
-            0f,0f,1f,
-            0f,0f,1f,
+            0f,0f,-1f,
+            0f,0f,-1f,
+            0f,0f,-1f,
+            0f,0f,-1f,
 
             // Top face
             0f,1f,0f,
@@ -242,7 +242,7 @@ public class Block extends GameItem {
 
     Block(BlockType type, int x, int y, int z) {
         super();
-        this.setPos((float)x, (float)y, (float)z);
+        this.setPos((float)x, (float)(y)-64f, (float)z);
         this.type = type;
     }
 

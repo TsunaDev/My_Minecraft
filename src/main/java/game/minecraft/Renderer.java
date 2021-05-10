@@ -99,6 +99,7 @@ public class Renderer {
         float angleZ = 0f;
 
         Matrix4f lightViewMatrix = transformation.updateLightViewMatrix(new Vector3f(direction).mul(light.getShadowPosMult()), new Vector3f(angleX, angleY, angleZ));
+        System.out.println(new Vector3f(direction).mul(light.getShadowPosMult()));
         DirectionalLight.OrthoCoords ortho = light.getOrthoCoords();
         Matrix4f orthoProjMatrix =  transformation.updateOrthoProjectionMatrix(ortho.left, ortho.right, ortho.bottom, ortho.top, ortho.near, ortho.far);
 

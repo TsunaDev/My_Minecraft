@@ -19,7 +19,7 @@ public class DummyGame implements IGameLogic {
     public DummyGame() {
         this.renderer = new Renderer();
         this.camera = new Camera();
-        camera.setPosition(0, 64f, 0);
+        camera.setPosition(0, 5f, 0);
         this.cameraMove = new Vector3f();
         this.scene = new Scene();
     }
@@ -58,6 +58,26 @@ public class DummyGame implements IGameLogic {
             wireframe = !wireframe;
             wPressed = false;
         }
+        DirectionalLight.OrthoCoords coords = scene.getSunLight().getOrthoCoords();
+
+        if (window.isKeyPressed(GLFW_KEY_LEFT)) {
+            coords.far -= 1f;
+        } else if (window.isKeyPressed(GLFW_KEY_RIGHT))
+            coords.far += 1f;
+        if (window.isKeyPressed(GLFW_KEY_1)) {
+            coords.left -= 1f;
+        } else if (window.isKeyPressed(GLFW_KEY_2))
+            coords.left += 1f;
+        if (window.isKeyPressed(GLFW_KEY_LEFT)) {
+            coords.far -= 1f;
+        } else if (window.isKeyPressed(GLFW_KEY_RIGHT))
+            coords.far += 1f;
+        System.out.println(coords.far);
+        scene.getSunLight().setOrthoCoords(coords.left, coords.right, coords.bottom, coords.top, coords.near, coords.far);
+        if (window.isKeyPressed(GLFW_KEY_UP))
+            scene.lightInc = 0.2f;
+        if (window.isKeyPressed(GLFW_KEY_DOWN))
+            scene.lightInc = -0.2f;
 
     }
 

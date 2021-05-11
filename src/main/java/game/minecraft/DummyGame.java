@@ -30,6 +30,7 @@ public class DummyGame implements IGameLogic {
         scene.initMeshMap();
         scene.initChunks(8);
         scene.initLighting();
+        scene.setFog(new Fog(true, new Vector3f(0.5f, 0.5f, 0.5f), 0.05f));
     }
 
     @Override
@@ -72,7 +73,6 @@ public class DummyGame implements IGameLogic {
             coords.far -= 1f;
         } else if (window.isKeyPressed(GLFW_KEY_RIGHT))
             coords.far += 1f;
-        System.out.println(coords.far);
         scene.getSunLight().setOrthoCoords(coords.left, coords.right, coords.bottom, coords.top, coords.near, coords.far);
         if (window.isKeyPressed(GLFW_KEY_UP))
             scene.lightInc = 0.2f;

@@ -18,6 +18,7 @@ public class Scene {
     private Vector3f ambientLight;
     private PointLight pointLight;
     private DirectionalLight sunLight;
+    private Fog fog;
     public float lightInc = 0.11f;
 
     public Scene() {
@@ -25,6 +26,7 @@ public class Scene {
         this.chunks = new ArrayList<>();
         this.noiseGenerator = new NoiseGenerator();
         this.lightAngle = -10f;
+        this.fog = Fog.NOFOG;
     }
 
     public void initMeshMap() throws Exception {
@@ -87,7 +89,6 @@ public class Scene {
 
         sunLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(-1, 0, 0), 1f);
         sunLight.setShadowPosMult(50);
-        //sunLight.setOrthoCoords(-8.0f * 16f, 8.0f * 16f, -8.0f * 16f, 8f * 16f, -8.0f *16f, 8f*16f);
         sunLight.setOrthoCoords(-50f, 50f, -50f, 50f, -1f, 50f);
     }
 
@@ -99,7 +100,6 @@ public class Scene {
             ambientLight.y = 0.04f * (10f + lightAngle) + 0.1f;
             ambientLight.z = 0.04f * (10f + lightAngle) + 0.1f;
         }
-        System.out.println(ambientLight.x);
         if (lightAngle > 180) {
             if (lightAngle <= 190) {
                 sunLight.setIntensity((1f - (lightAngle - 180f) / 10f));
@@ -117,9 +117,16 @@ public class Scene {
             lightDirection.y = yValue;
             lightDirection.z = zValue;
             lightDirection.normalize();
-            System.out.println(Math.sqrt((lightDirection.y * lightDirection.y) + (lightDirection.z * lightDirection.z)));
             float lightAngle = (float) Math.toDegrees(Math.acos(lightDirection.z));
         }
+    }
+
+    public Fog getFog() {
+        return fog;
+    }
+
+    public void setFog(Fog fog) {
+        this.fog = fog;
     }
 
     public DirectionalLight getSunLight() {
@@ -132,6 +139,10 @@ public class Scene {
 
     public PointLight getPointLight() {
         return pointLight;
+    }
+
+    public float getLightAngle() {
+        return lightAngle;
     }
 
     public void cleanUp() {

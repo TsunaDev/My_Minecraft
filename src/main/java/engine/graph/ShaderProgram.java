@@ -55,6 +55,12 @@ public class ShaderProgram {
         createUniform(uniformName + ".intensity");
     }
 
+    public void createFogUniform(String uniformName) throws Exception {
+        createUniform(uniformName + ".activ");
+        createUniform(uniformName + ".colour");
+        createUniform(uniformName + ".density");
+    }
+
     public void setUniform(String uniformName, Matrix4f value) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             glUniformMatrix4fv(uniforms.get(uniformName), false, value.get(stack.mallocFloat(16)));
@@ -99,6 +105,12 @@ public class ShaderProgram {
         setUniform(uniformName + ".colour", light.getColor());
         setUniform(uniformName + ".direction", light.getDirection());
         setUniform(uniformName + ".intensity", light.getIntensity());
+    }
+
+    public void setUniform(String uniformName, Fog fog) {
+        setUniform(uniformName + ".activ", fog.isActive() ? 1:0);
+        setUniform(uniformName + ".colour", fog.getColor());
+        setUniform(uniformName + ".density", fog.getDensity());
     }
 
     public void createVertexShader(String shaderCode) throws Exception {

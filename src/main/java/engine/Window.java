@@ -1,5 +1,6 @@
 package engine;
 
+import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
@@ -14,11 +15,13 @@ public class Window {
     private int height;
     private long windowID;
     private boolean resized = false;
+    private Vector4f clearColor;
 
     public Window(String title, int width, int height) {
         this.title = title;
         this.width = width;
         this.height = height;
+        clearColor = new Vector4f(0, 0, 0, 0);
     }
 
     public void init() {
@@ -73,7 +76,15 @@ public class Window {
     }
 
     public void setClearColor(float r, float g, float b, float a) {
+        clearColor.x = r;
+        clearColor.y = g;
+        clearColor.z = b;
+        clearColor.w = a;
         glClearColor(r, g, b, a);
+    }
+
+    public Vector4f getClearColor() {
+        return clearColor;
     }
 
     public boolean isKeyPressed(int key) {

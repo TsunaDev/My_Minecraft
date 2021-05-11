@@ -40,6 +40,12 @@ struct Material
     float reflectance;
 };
 
+struct Fog{
+    int activ;
+    vec3 colour;
+    float density;
+};
+
 uniform sampler2D texture_sampler;
 uniform vec3 ambientLight;
 uniform float specularPower;
@@ -47,7 +53,7 @@ uniform Material material;
 uniform PointLight pointLight;
 uniform DirectionalLight directionalLight;
 uniform sampler2D shadowMap;
-
+uniform Fog fog;
 vec4 ambientC;
 vec4 diffuseC;
 vec4 speculrC;
@@ -122,6 +128,17 @@ float calcShadow(vec4 position)
     return 1 - shadowFactor;
 }
 
+vec4 calcFog(vec3 pos, vec4 colour, Fog fog, vec3 ambientLight, DirectionalLight dirLight)
+{
+    vec3 fogColor = fog.colour * (ambientLight + dirLight.colour * dirLight.intensity);
+    float distance = length(pos);
+    float fogFactor = 1.0 / exp( (distance * fog.density)* (distance * fog.density));
+    fogFactor = clamp( fogFactor, 0.0, 1.0 );
+
+    vec3 resultColour = mix(fogColor, colour.xyz, fogFactor);
+    return vec4(resultColour.xyz, colour.w);
+}
+
 void main()
 {
     setupColours(material, outTexCoord);
@@ -135,5 +152,7 @@ void main()
 
     float shadow = calcShadow(mlightviewVertexPos);
     fragColor = clamp(ambientC * vec4(ambientLight, 1) + diffuseSpecularComp * shadow, 0, 1);
-
+    if (fog.activ == 1) {
+        fragColor = calcFog(mvVertexPos, fragColor, fog, ambientLight, directionalLight);
+    }
 }

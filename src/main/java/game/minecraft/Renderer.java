@@ -38,7 +38,7 @@ public class Renderer {
         projection = transformation.updateProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
 
 
-        window.setClearColor(0,0,0,0);
+        window.setClearColor(0.2f,0.8f,1f,1f);
     }
 
     private void setupSceneShader() throws Exception {
@@ -56,6 +56,7 @@ public class Renderer {
         shaderProgram.createMaterialUniform("material");
         shaderProgram.createPointLightUniform("pointLight");
         shaderProgram.createDirLightUniform("directionalLight");
+        shaderProgram.createFogUniform("fog");
 
         shaderProgram.createUniform("shadowMap");
         shaderProgram.createUniform("orthoProjectionMatrix");
@@ -80,6 +81,18 @@ public class Renderer {
         glViewport(0, 0, window.getWidth(), window.getHeight());
         transformation.updateProjectionMatrix(Renderer.FOV, window.getWidth(), window.getHeight(), Renderer.CLIP_NEAR, Renderer.CLIP_FAR);
 
+        float lightAngle = scene.getLightAngle();
+
+        if (lightAngle > -10f && lightAngle <= 20f) {
+            scene.getFog().setColor(new Vector3f((10f + lightAngle) / 3f * 0.02f, (10f + lightAngle) / 3f * 0.08f, (10f + lightAngle) / 3f * 0.1f));
+            window.setClearColor((10f + lightAngle) / 3f * 0.02f, (10f + lightAngle) / 3f * 0.08f, (10f + lightAngle) / 3f * 0.1f, 1f);
+        }
+
+        if (lightAngle > 150 && lightAngle < 190) {
+            scene.getFog().setColor(new Vector3f(0.2f - (lightAngle - 150f) / 4f * 0.02f, 0.8f - (lightAngle - 150f) / 4f * 0.08f, 1f - (lightAngle - 150f) / 4f * 0.1f));
+            window.setClearColor(0.2f - (lightAngle - 150f) / 4f * 0.02f, 0.8f - (lightAngle - 150f) / 4f * 0.08f, 1f - (lightAngle - 150f) / 4f * 0.1f, 1f);
+        }
+
         renderScene(window, camera, scene);
 
     }
@@ -99,7 +112,6 @@ public class Renderer {
         float angleZ = 0f;
 
         Matrix4f lightViewMatrix = transformation.updateLightViewMatrix(new Vector3f(direction).mul(light.getShadowPosMult()), new Vector3f(angleX, angleY, angleZ));
-        System.out.println(new Vector3f(direction).mul(light.getShadowPosMult()));
         DirectionalLight.OrthoCoords ortho = light.getOrthoCoords();
         Matrix4f orthoProjMatrix =  transformation.updateOrthoProjectionMatrix(ortho.left, ortho.right, ortho.bottom, ortho.top, ortho.near, ortho.far);
 
@@ -151,6 +163,7 @@ public class Renderer {
         dir.mul(viewMatrix);
         currDirLight.setDirection(new Vector3f(dir.x, dir.y, dir.z));
         shaderProgram.setUniform("directionalLight", currDirLight);
+        shaderProgram.setUniform("fog", scene.getFog());
         shaderProgram.setUniform("texture_sampler", 0);
         shaderProgram.setUniform("shadowMap", 2);
 

@@ -28,7 +28,7 @@ public class Scene {
     }
 
     public void initMeshMap() throws Exception {
-        Texture texture = new Texture("textures/atlas2.png");
+        Texture texture = new Texture("textures/atlas3.png");
         Material material = new Material(texture);
 
         for (BlockType type : BlockType.values()) {
@@ -80,7 +80,7 @@ public class Scene {
     }
 
     public void initLighting() {
-        ambientLight = new Vector3f(.3f, .3f, .3f);
+        ambientLight = new Vector3f(.5f, .5f, .5f);
         pointLight = new PointLight(new Vector3f(1f, 1f, 1f), new Vector3f(10000f, 10000f, 0f), 0.0f);
         PointLight.Attenuation attenuation = new PointLight.Attenuation(1.5f, 0f, 0f);
         pointLight.setAttenuation(attenuation);
@@ -95,20 +95,19 @@ public class Scene {
         lightAngle += lightInc;
         if (lightAngle <= 0) {
             sunLight.setIntensity((lightAngle + 10f) / 10f);
+            ambientLight.x = 0.04f * (10f + lightAngle) + 0.1f;
+            ambientLight.y = 0.04f * (10f + lightAngle) + 0.1f;
+            ambientLight.z = 0.04f * (10f + lightAngle) + 0.1f;
         }
+        System.out.println(ambientLight.x);
         if (lightAngle > 180) {
-            sunLight.setIntensity((1f - (lightAngle - 180f) / 10f));
-            if (lightAngle > 190 && lightAngle <= 250) {
-                DirectionalLight.OrthoCoords ortho = sunLight.getOrthoCoords();
-                ortho.far = 0;
-                sunLight.setOrthoCoords(ortho.left, ortho.right, ortho.bottom, ortho.top, ortho.near, ortho.far);
-                sunLight.setDirection(new Vector3f(0, 1, 0));
-            }
-            else if (lightAngle > 250) {
+            if (lightAngle <= 190) {
+                sunLight.setIntensity((1f - (lightAngle - 180f) / 10f));
+                ambientLight.x = 0.04f * (190f - lightAngle) + 0.1f;
+                ambientLight.y = ambientLight.x;
+                ambientLight.z = ambientLight.x;
+            } else if (lightAngle > 250) {
                 lightAngle = -10;
-                DirectionalLight.OrthoCoords ortho = sunLight.getOrthoCoords();
-                ortho.far = 50f;
-                sunLight.setOrthoCoords(ortho.left, ortho.right, ortho.bottom, ortho.top, ortho.near, ortho.far);
             }
         } else {
             float zValue = (float) Math.cos(Math.toRadians(lightAngle));

@@ -87,10 +87,10 @@ public class Block extends GameItem {
             24f, 3f,
 
             // For text coords in top face
-            29f, 2f,
-            30f, 2f,
-            29f, 3f,
-            30f, 3f,
+            23f, 5f,
+            24f, 5f,
+            23f, 6f,
+            24f, 6f,
 
             // For text coords in right face
             23f, 2f,

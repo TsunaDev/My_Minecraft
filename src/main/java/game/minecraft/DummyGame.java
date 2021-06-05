@@ -28,7 +28,7 @@ public class DummyGame implements IGameLogic {
     public void init(Window window) throws Exception {
         renderer.init(window);
         scene.initMeshMap();
-        scene.initChunks(8);
+        scene.updateChunks((int)camera.getPosition().x , (int)camera.getPosition().z, 6);
         scene.initLighting();
         scene.setFog(new Fog(true, new Vector3f(0.5f, 0.5f, 0.5f), 0.05f));
     }
@@ -89,6 +89,7 @@ public class DummyGame implements IGameLogic {
            Vector2f rot = mouseInput.getDispVec();
            camera.rotate(rot.x * 0.2f, rot.y * 0.2f, 0);
        }
+       scene.updateChunks((int)camera.getPosition().x, (int)camera.getPosition().z, 6);
        scene.update();
     }
 

@@ -72,8 +72,6 @@ public class Chunk {
             for (int z = 0; z < DEPTH; z++) {
                 int y = (int) (noiseGenerator.noise(x + offsetX, 0, z + offsetZ) * 10f) + (HEIGHT / 2);
 
-                if (x == 0 && z == 0)
-                    blocks[y + 3][x][z].setType(GRASS);
                 blocks[y][x][z].setType(GRASS);
                 for (int i = 0; i < 5; i++) {
                     y--;

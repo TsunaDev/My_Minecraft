@@ -52,18 +52,22 @@ public class Scene {
         return meshMap;
     }
 
-    public void initChunks(int nbChunkPerLine) throws Exception {
-        int xOrigin = 0;
-        int zOrigin = 0;
-
+    public void updateChunks(int xOrigin, int zOrigin, int nbChunkPerLine) {
+        boolean updated = false;
         if (nbChunkPerLine % 2 != 0)
             nbChunkPerLine += 1;
 
         for (int distance = 0; distance < nbChunkPerLine / 2; distance++) {
             for (int x = xOrigin - (Chunk.WIDTH * (distance + 1)); x < xOrigin + (Chunk.WIDTH * (distance + 1)); x += Chunk.WIDTH) {
                 for (int z = zOrigin - (Chunk.DEPTH * (distance + 1)); z < zOrigin + (Chunk.DEPTH * (distance + 1)); z += Chunk.DEPTH) {
-                    if (!Chunk.chunkExists(chunks, x, z)) {
-                        chunks.add(new Chunk(x, z, noiseGenerator));
+                    int posX = (x % Chunk.WIDTH > Chunk.WIDTH / 2) ? x + (-x % Chunk.WIDTH) : x - x % Chunk.WIDTH;
+                    int posZ = (z % Chunk.DEPTH > Chunk.DEPTH / 2) ? z + (-z % Chunk.DEPTH) : z - z % Chunk.DEPTH;
+                    System.out.println("Z=" + z);
+                    System.out.println("zPos=" + posZ);
+
+                    if (!Chunk.chunkExists(chunks, posX, posZ)) {
+                        updated = true;
+                        chunks.add(new Chunk(posX, posZ, noiseGenerator));
                         chunks.get(chunks.size() - 1).init();
                         chunks.get(chunks.size() - 1).generate();
                     }
@@ -71,9 +75,21 @@ public class Scene {
             }
         }
 
-        for (Chunk chunk : chunks) {
-            chunk.updateNeighbors(chunks);
+        for (int i = 0; i < chunks.size(); i++) {
+            Chunk chunk =  chunks.get(i);
+            int xDistance = Chunk.WIDTH * (nbChunkPerLine / 2);
+            int zDistance = Chunk.DEPTH * (nbChunkPerLine / 2);
+
+            if (chunk.getOffsetX() < xOrigin - xDistance || chunk.getOffsetX() > xOrigin + xDistance ||
+            chunk.getOffsetZ() < zOrigin - zDistance || chunk.getOffsetZ() > zOrigin + zDistance) {
+                chunks.remove(i);
+                updated = true;
+            }
         }
+
+        if (updated)
+            for (Chunk chunk : chunks)
+                chunk.updateNeighbors(chunks);
 
     }
 
@@ -117,7 +133,6 @@ public class Scene {
             lightDirection.y = yValue;
             lightDirection.z = zValue;
             lightDirection.normalize();
-            float lightAngle = (float) Math.toDegrees(Math.acos(lightDirection.z));
         }
     }
 

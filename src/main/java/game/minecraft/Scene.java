@@ -62,8 +62,6 @@ public class Scene {
                 for (int z = zOrigin - (Chunk.DEPTH * (distance + 1)); z < zOrigin + (Chunk.DEPTH * (distance + 1)); z += Chunk.DEPTH) {
                     int posX = (x % Chunk.WIDTH > Chunk.WIDTH / 2) ? x + (-x % Chunk.WIDTH) : x - x % Chunk.WIDTH;
                     int posZ = (z % Chunk.DEPTH > Chunk.DEPTH / 2) ? z + (-z % Chunk.DEPTH) : z - z % Chunk.DEPTH;
-                    System.out.println("Z=" + z);
-                    System.out.println("zPos=" + posZ);
 
                     if (!Chunk.chunkExists(chunks, posX, posZ)) {
                         updated = true;
